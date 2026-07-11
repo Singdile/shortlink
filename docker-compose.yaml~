@@ -1,0 +1,30 @@
+services:
+  mysql-server:
+    image: mysql:8.0
+    container_name: url-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: url
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./deploy/mysql/data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-migration:
+    image: migrate/migrate
+    container_name: mysql_migration
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+    command:
+      - -path=/migrations
+      - -database=mysql://root:123456@mysql-server:3306/url
+      - up

@@ -1,0 +1,10 @@
+package murmur3
+
+import "github.com/spaolacci/murmur3"
+
+var hasher = murmur3.New64()
+
+func Hash(lurl string) int64 {
+	hasher.Write([]byte(lurl))
+	return int64(hasher.Sum64)()
+}

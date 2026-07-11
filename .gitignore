@@ -1,0 +1,19 @@
+# MySQL data directory - contains runtime database files
+deploy/mysql/data/
+
+# Binary executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test files
+*.test
+
+# Output files
+*.out
+
+# Go workspace file
+go.work
+go.work.sum

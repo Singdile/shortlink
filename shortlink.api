@@ -1,0 +1,36 @@
+// api 版本
+syntax = "v1"
+
+info (
+	author: "singdile"
+	date:   "2026-07-05"
+	desc:   "短链接api"
+)
+
+type ConvertRequest {
+	LongUrl string `json:"longUrl" validate:"required,http_url"`
+}
+
+type ConvertResponse {
+	ShortUrl string `json:"shortUrl"`
+}
+
+type ShowRequest {
+	ShortUrl string `json:"shortUrl" validate:"required,http_url"`
+}
+
+type ShowResponse {
+	LongUrl string `json:"longUrl"`
+}
+
+@server (
+	prefix: /v1
+)
+service shortlink-api {
+	@handler ConvertHandler
+	post /shorturl (ConvertRequest) returns (ConvertResponse)
+
+	@handler ShowHandler
+	get /:shortUrl (ShowRequest) returns (ShowResponse)
+}
+

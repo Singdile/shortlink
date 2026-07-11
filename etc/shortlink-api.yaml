@@ -1,0 +1,7 @@
+Name: shortlink-api
+Host: 0.0.0.0
+Port: 8888
+ShortUrlDB:
+  DSN: root:123456@tcp(127.0.0.1:13306)/url?parseTime=true
+SequenceDB:
+  DSN: root:123456@tcp(127.0.0.1:13306)/url?parseTime=true
