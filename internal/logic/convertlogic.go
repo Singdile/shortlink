@@ -12,6 +12,7 @@ import (
 	"short/internal/types"
 	"short/pkg/connect"
 	"short/pkg/murmur3"
+	"short/pkg/urltool"
 
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -60,7 +61,12 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 	}
 
 	// 4.避免循环转链 (输入的不能是一个已有的短链接)
-	_, err = l.svcCtx.UrlModel.FindOneBySurl(context.Background(), sql.NullString{String: req.LongUrl, Valid: true})
+	basePath, err := urltool.GetBaseUrl(req.LongUrl)
+	if err != nil {
+		logx.Errorw("urltool.GetBaseUrl failed", logx.Field("err", err.Error()))
+		return nil, err
+	}
+	_, err = l.svcCtx.UrlModel.FindOneBySurl(context.Background(), sql.NullString{String: basePath, Valid: true})
 	if err == nil { //找到了，说明输入的是一个已有的而短链接，决绝转换
 		return nil, errors.New("输入的链接已经是短链接，不能循环转换")
 	}
@@ -68,9 +74,8 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 	if err != sqlx.ErrNotFound {
 		return nil, errors.New("查询短链接 数据库操作失败")
 	}
-	// 从发号器表获取一个号，生成短链接
+	// 从发号器表获取一个号，s生成短链接
 	// TODO
-	l.svcCtx.Sequence
 	// 将长链接和短链接的对应关系写入数据库
 
 	// 返回响应
