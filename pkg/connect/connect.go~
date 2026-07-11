@@ -1,6 +1,0 @@
-package connect
-
-// CheckUrl 检查url链接是否真实有效
-func CheckUrl(url string) (bool, error) {
-
-}

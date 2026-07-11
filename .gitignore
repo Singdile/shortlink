@@ -17,3 +17,21 @@ deploy/mysql/data/
 # Go workspace file
 go.work
 go.work.sum
+
+# Compiled binary
+short
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
