@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"short/internal/svc"
 	"short/internal/types"
@@ -74,9 +75,16 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 	if err != sqlx.ErrNotFound {
 		return nil, errors.New("查询短链接 数据库操作失败")
 	}
-	// 从发号器表获取一个号，s生成短链接
+	// 从发号器表获取一个号，生成短链接
 	// TODO
-	// 将长链接和短链接的对应关系写入数据库
+	// 1. 从表中使用 replace into 语句更新记录，使用自增的id作为短链接的号
+	id, err := l.svcCtx.Sequence.Next(context.Background())
+	if err != nil {
+		logx.Errorw("Sequence.Next failed", logx.Field("err", err.Error()))
+		return nil, err
+	}
+	fmt.Println(id)
+	// 2. 将长链接和短链接的对应关系写入数据库
 
 	// 返回响应
 	return

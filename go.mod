@@ -4,6 +4,8 @@ go 1.26.1
 
 require (
 	github.com/go-playground/validator/v10 v10.30.3
+	github.com/jmoiron/sqlx v1.4.0
+	github.com/spaolacci/murmur3 v1.1.0
 	github.com/zeromicro/go-zero v1.7.3
 )
 
@@ -33,7 +35,6 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.24.0 // indirect
