@@ -20,10 +20,22 @@ func TestGetBaseUrl(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "invalid url",
+			name:    "relative url",
 			longurl: "xxx/12345",
 			want:    "",
 			wantErr: true,
+		},
+		{
+			name:    "empty url",
+			longurl: "",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "url with query parameters",
+			longurl: "https://www.example.com/path/to/resource?param1=value1&param2=value2",
+			want:    "resource",
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {

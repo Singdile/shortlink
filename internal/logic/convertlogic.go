@@ -55,7 +55,7 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 		return &types.ConvertResponse{ShortUrl: shortUrlMap.Surl.String}, nil
 	}
 
-	if err != nil && err != sqlx.ErrNotFound {
+	if err != sqlx.ErrNotFound {
 		logx.Errorw("ShortUrlMapModel.FindByHashAndLurl failed", logx.Field("err", err.Error()))
 		return nil, err
 	}
