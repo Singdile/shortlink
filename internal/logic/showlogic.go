@@ -5,9 +5,11 @@ package logic
 
 import (
 	"context"
-
+	"database/sql"
+	"errors"
 	"short/internal/svc"
 	"short/internal/types"
+	"short/model"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -26,8 +28,27 @@ func NewShowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ShowLogic {
 	}
 }
 
+// Show 根据短链接查看对应的长链接
 func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err error) {
-	// todo: add your logic here and delete this line
+	// 1.参数校验
+	shortlinkstr := req.ShortUrl
 
-	return
+	// 2.到数据库中查找
+	shorturlMap, err := l.svcCtx.UrlModel.FindOneBySurl(l.ctx, sql.NullString{
+		String: shortlinkstr,
+		Valid:  true,
+	})
+
+	if err != nil {
+		if err == model.ErrNotFound {
+			return nil, errors.New("404 not found")
+		}
+		return nil, err
+	}
+
+	// 3. 返回响应
+	resp = &types.ShowResponse{
+		LongUrl: shorturlMap.Lurl.String,
+	}
+	return resp, nil
 }

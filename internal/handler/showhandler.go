@@ -6,10 +6,13 @@ package handler
 import (
 	"net/http"
 
-	"github.com/zeromicro/go-zero/rest/httpx"
 	"short/internal/logic"
 	"short/internal/svc"
 	"short/internal/types"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 func ShowHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
@@ -20,12 +23,22 @@ func ShowHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
+		// url参数校验
+		validate := validator.New(validator.WithRequiredStructEnabled())
+		err := validate.Struct(&req)
+		if err != nil {
+			logx.Error("validator check failed", logx.LogField{Key: "err", Value: err.Error()})
+			httpx.ErrorCtx(r.Context(), w, err)
+			return
+		}
+
 		l := logic.NewShowLogic(r.Context(), svcCtx)
 		resp, err := l.Show(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			http.Redirect(w, r, resp.LongUrl, http.StatusTemporaryRedirect)
+			//httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }
