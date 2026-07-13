@@ -7,7 +7,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+	"short/model"
+	"short/pkg/base62"
 
 	"short/internal/svc"
 	"short/internal/types"
@@ -45,6 +46,7 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 	if !ok {
 		return nil, errors.New("URL 无效")
 	}
+
 	// 2.验证长链接是否已经有转换后的短链接
 	// 2.1 murmur3 hash 值
 	murValue := murmur3.Hash(req.LongUrl)
@@ -53,7 +55,7 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 	shortUrlMap, err := l.svcCtx.UrlModel.FindByHashAndLurl(l.ctx, req.LongUrl, murValue)
 
 	if err == nil { //说明查找成功，可以直接返回对应的短链接
-		return &types.ConvertResponse{ShortUrl: shortUrlMap.Surl.String}, nil
+		return &types.ConvertResponse{ShortUrl: l.svcCtx.Config.Domain + shortUrlMap.Surl.String}, nil
 	}
 
 	if err != sqlx.ErrNotFound {
@@ -61,7 +63,7 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 		return nil, err
 	}
 
-	// 4.避免循环转链 (输入的不能是一个已有的短链接)
+	// 3.避免循环转链 (输入的不能是一个已有的短链接)
 	basePath, err := urltool.GetBaseUrl(req.LongUrl)
 	if err != nil {
 		logx.Errorw("urltool.GetBaseUrl failed", logx.Field("err", err.Error()))
@@ -76,16 +78,51 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 		return nil, errors.New("查询短链接 数据库操作失败")
 	}
 	// 从发号器表获取一个号，生成短链接
-	// TODO
-	// 1. 从表中使用 replace into 语句更新记录，使用自增的id作为短链接的号
-	id, err := l.svcCtx.Sequence.Next(context.Background())
+	shortlinkString := ""
+
+	// 4. 生成短链
+	for {
+		// 1. 从表中使用 replace into 语句更新记录，使用自增的id作为短链接的号
+		id, err := l.svcCtx.Sequence.Next(context.Background())
+		if err != nil {
+			logx.Errorw("Sequence.Next failed", logx.Field("err", err.Error()))
+			return nil, err
+		}
+		// 2.将id转换为62进制数作为短链部分
+		shortlinkString = base62.Uint2string(id)
+
+		// 3. 对短链字符串进行一些特殊词汇筛选
+		if _, ok := l.svcCtx.BlackMap[shortlinkString]; !ok { //没有特殊词汇，则生成的短链符合要求，跳出循环
+			break
+		}
+
+	}
+
+	// 5. 将长链接和短链接的对应关系写入数据库
+	lsurl := &model.ShortUrlMap{
+		Lurl: sql.NullString{
+			String: req.LongUrl,
+			Valid:  true,
+		},
+		Surl: sql.NullString{
+			String: shortlinkString,
+			Valid:  true,
+		},
+		LurlHash: sql.NullInt64{
+			Int64: int64(murValue),
+			Valid: true,
+		},
+	}
+	_, err = l.svcCtx.UrlModel.Insert(context.Background(), lsurl)
 	if err != nil {
-		logx.Errorw("Sequence.Next failed", logx.Field("err", err.Error()))
+		logx.Errorw("UrlModel.Insert failed", logx.Field("err", err.Error()))
 		return nil, err
 	}
-	fmt.Println(id)
-	// 2. 将长链接和短链接的对应关系写入数据库
 
-	// 返回响应
-	return
+	// 返回响应, 拼接短域名和短链
+	shorturl := l.svcCtx.Config.Domain + shortlinkString
+	resp = &types.ConvertResponse{
+		ShortUrl: shorturl,
+	}
+	return resp, nil
 }

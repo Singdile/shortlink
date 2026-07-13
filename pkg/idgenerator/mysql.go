@@ -25,7 +25,7 @@ type MySqlConfig struct {
 	Table           string        // 表名
 	MaxOpenConns    int           // 最大打开连接数
 	MaxIdleConns    int           // 最大空闲连接数
-	ConnMaxLifetime time.Duration // 连接最大生命周期，单位秒
+	ConnMaxLifetime time.Duration // 连接最大生命周期，单位分钟，比如30m,表示30分钟
 }
 
 // NewMysqlGenerator 创建一个新的 MySQL 发号器

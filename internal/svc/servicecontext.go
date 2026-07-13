@@ -15,6 +15,7 @@ type ServiceContext struct {
 	Config   config.Config
 	UrlModel model.ShortUrlMapModel
 	Sequence idgenerator.Generator
+	BlackMap map[string]struct{}
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -24,9 +25,15 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		panic(err)
 	}
 
+	blackMap := make(map[string]struct{})
+	for _, v := range c.BlackList {
+		blackMap[v] = struct{}{}
+	}
+
 	return &ServiceContext{
 		Config:   c,
 		UrlModel: urlModel,
 		Sequence: sequenceModel,
+		BlackMap: blackMap,
 	}
 }

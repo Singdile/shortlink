@@ -38,7 +38,7 @@ func (m *customShortUrlMapModel) withSession(session sqlx.Session) ShortUrlMapMo
 
 func (m *customShortUrlMapModel) FindByHashAndLurl(ctx context.Context, lurl string, hashvalue uint64) (*ShortUrlMap, error) {
 	// MurmurHash3
-	lurlHash := hashvalue
+	lurlHash := int64(hashvalue)
 
 	// 查询数据库
 	sqlStr := fmt.Sprintf("select %s from %s where `lurl_hash` = ? and `lurl` = ? limit 1", shortUrlMapRows, m.table)

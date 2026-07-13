@@ -13,6 +13,8 @@ type Config struct {
 	rest.RestConf
 	ShortUrlDB ShortUrlDB
 	SequenceDB idgenerator.MySqlConfig
+	BlackList  []string
+	Domain     string //短域名
 }
 
 type ShortUrlDB struct {
