@@ -6,6 +6,7 @@ package config
 import (
 	"short/pkg/idgenerator"
 
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/rest"
 )
 
@@ -14,7 +15,8 @@ type Config struct {
 	ShortUrlDB ShortUrlDB
 	SequenceDB idgenerator.MySqlConfig
 	BlackList  []string
-	Domain     string //短域名
+	Domain     string          //短域名
+	RedisConf  redis.RedisConf // 对应 yaml 中的 RedisConf
 }
 
 type ShortUrlDB struct {

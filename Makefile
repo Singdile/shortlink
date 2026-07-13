@@ -3,4 +3,7 @@
 mysql-cli:
 	docker exec -it url-mysql mysql -u root -p123456 url
 
+redis-cli:
+	docker exec -it url-redis redis-cli
+
 

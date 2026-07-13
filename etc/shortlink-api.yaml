@@ -12,6 +12,12 @@ SequenceDB:
 Domain: singdile.space/
 
 
+# Redis 配置
+RedisConf:
+  Host: 127.0.0.1:16379
+  Type: node       # 可选值: node(单机), cluster(集群), sentinel(哨兵)
+  TLS: false    # 是否开启 TLS
+
 # 短链接过滤词表
 BlackList:
   # 技术保留词

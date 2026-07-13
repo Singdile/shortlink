@@ -8,17 +8,20 @@ import (
 	"short/model"
 	"short/pkg/idgenerator"
 
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
 type ServiceContext struct {
-	Config   config.Config
-	UrlModel model.ShortUrlMapModel
-	Sequence idgenerator.Generator
-	BlackMap map[string]struct{}
+	Config      config.Config
+	UrlModel    model.ShortUrlMapModel
+	Sequence    idgenerator.Generator
+	BlackMap    map[string]struct{}
+	RedisClient *redis.Redis
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
+	rds := redis.MustNewRedis(c.RedisConf)
 	urlModel := model.NewShortUrlMapModel(sqlx.NewMysql(c.ShortUrlDB.DSN))
 	sequenceModel, err := idgenerator.NewMysqlGenerator(&c.SequenceDB) //发号器实实例
 	if err != nil {
@@ -31,9 +34,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	}
 
 	return &ServiceContext{
-		Config:   c,
-		UrlModel: urlModel,
-		Sequence: sequenceModel,
-		BlackMap: blackMap,
+		Config:      c,
+		UrlModel:    urlModel,
+		Sequence:    sequenceModel,
+		BlackMap:    blackMap,
+		RedisClient: rds,
 	}
 }
