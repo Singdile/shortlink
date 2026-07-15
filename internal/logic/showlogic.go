@@ -33,7 +33,7 @@ func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err 
 	// 1.参数校验
 	shortlinkstr := req.ShortUrl
 
-	// TODO： 优化添加Redis缓存
+	// 优化添加Redis缓存
 	res, err := l.svcCtx.RedisClient.GetCtx(l.ctx, shortlinkstr)
 	if err != nil { //redis出现错误
 		l.Logger.Errorf("redis get err: %v", err)
@@ -43,27 +43,42 @@ func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err 
 		return &types.ShowResponse{LongUrl: res}, nil
 	}
 	// 2.到数据库中查找
-	shorturlMap, err := l.svcCtx.UrlModel.FindOneBySurl(l.ctx, sql.NullString{
-		String: shortlinkstr,
-		Valid:  true,
+	// singleflight supports one key only to execute once
+	longUrl, err := l.svcCtx.SingleFlight.Do(shortlinkstr, func() (interface{}, error) {
+		// after lock , check the source
+		res, err = l.svcCtx.RedisClient.GetCtx(l.ctx, shortlinkstr)
+		if err == nil && len(res) != 0 { // cache has been updated
+			return res, nil
+		}
+
+		// have to get value from DB
+		shorturlMap, err := l.svcCtx.UrlModel.FindOneBySurl(l.ctx, sql.NullString{
+			String: shortlinkstr,
+			Valid:  true,
+		})
+
+		if err != nil {
+			if err == model.ErrNotFound {
+				return nil, errors.New("404 not found")
+			}
+			return nil, err
+		}
+
+		// 查找成功，记录redis
+		err = l.svcCtx.RedisClient.SetexCtx(l.ctx, shorturlMap.Surl.String, shorturlMap.Lurl.String, 120)
+		if err != nil {
+			l.Logger.Errorf("redis set err: %v", err)
+		}
+
+		return shorturlMap.Lurl.String, nil
 	})
 
 	if err != nil {
-		if err == model.ErrNotFound {
-			return nil, errors.New("404 not found")
-		}
 		return nil, err
 	}
-
-	// 查找成功，记录redis
-	err = l.svcCtx.RedisClient.SetCtx(l.ctx, shorturlMap.Surl.String, shorturlMap.Lurl.String)
-	if err != nil {
-		l.Logger.Errorf("redis set err: %v", err)
-	}
-
 	// 3. 返回响应
 	resp = &types.ShowResponse{
-		LongUrl: shorturlMap.Lurl.String,
+		LongUrl: longUrl.(string),
 	}
 	return resp, nil
 }

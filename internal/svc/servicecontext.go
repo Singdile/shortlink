@@ -10,14 +10,16 @@ import (
 
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"github.com/zeromicro/go-zero/core/syncx"
 )
 
 type ServiceContext struct {
-	Config      config.Config
-	UrlModel    model.ShortUrlMapModel
-	Sequence    idgenerator.Generator
-	BlackMap    map[string]struct{}
-	RedisClient *redis.Redis
+	Config       config.Config
+	UrlModel     model.ShortUrlMapModel
+	Sequence     idgenerator.Generator
+	BlackMap     map[string]struct{}
+	RedisClient  *redis.Redis
+	SingleFlight syncx.SingleFlight
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -34,10 +36,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	}
 
 	return &ServiceContext{
-		Config:      c,
-		UrlModel:    urlModel,
-		Sequence:    sequenceModel,
-		BlackMap:    blackMap,
-		RedisClient: rds,
+		Config:       c,
+		UrlModel:     urlModel,
+		Sequence:     sequenceModel,
+		BlackMap:     blackMap,
+		RedisClient:  rds,
+		SingleFlight: syncx.NewSingleFlight(),
 	}
 }
