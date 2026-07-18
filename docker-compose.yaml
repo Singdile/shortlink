@@ -42,5 +42,19 @@ services:
       - -database=mysql://root:123456@tcp(mysql-server:3306)/url
       - up
 
+  shortlink-api:
+    build: .
+    container_name: shortlink-api
+    restart: always
+    ports:
+      - "8888:8888"
+    depends_on:
+      mysql-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-migration:
+        condition: service_completed_successfully
+
 volumes:
   redis-data:

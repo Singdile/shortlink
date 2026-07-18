@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"short/internal/config"
 	"short/internal/handler"
@@ -22,6 +23,16 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
+
+	// 环境变量覆盖
+	if dsn := os.Getenv("MYSQL_URL"); dsn != "" {
+		c.ShortUrlDB.DSN = dsn
+		c.SequenceDB.DSN = dsn
+	}
+	if host := os.Getenv("REDIS_URL"); host != "" {
+		c.RedisConf.Host = host
+		c.BizRedis.Host = host
+	}
 
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()

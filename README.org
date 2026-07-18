@@ -4,9 +4,11 @@
 #+date: 2026-07-02
 
 * 环境搭建
+
 使用docker启动mysql,构建两个表。
 - 一个是发号器表,用于生成唯一ID.
 - 一个是长短链接映射表，用于记录长短链接的一一对应关系
+
 *创建发号器表*
 #+begin_src sql
     CREATE TABLE `sequence` (
@@ -40,7 +42,17 @@ CREATE TABLE `short_url_map` (
 - MurmurHash3 输出的是64位无符号的整数，而MD5存储到Mysql上是32字节的字符串
 - 使用数字做索引，内部的排序、移动等操作需要的损耗更小
 
+* 快速启动
+
+#+begin_src bash
+docker compose up -d
+go run shortlink.go
+#+end_src
+
+访问 http://localhost:8888/v1/shorturl
+
 * 搭建go-zero框架的骨架
+
 ** 编写api文件 shortlink.api
   两个接口:
   - 一个由长链接创建短链接 POST
@@ -54,7 +66,7 @@ CREATE TABLE `short_url_map` (
 	  @handler ConvertHandler
 	  post /shorturl (ConvertRequest) returns (ConvertResponse)
 
-	  @handler ConvertHandler
+	  @handler ShowHandler
 	  get /:shortUrl (ShowRequest) returns (ShowResponse)
   }
     #+end_src
@@ -62,6 +74,7 @@ CREATE TABLE `short_url_map` (
 =goctl api go -api shortlink.api -dir .=
 
 ** 生成数据库中的表对应的model代码
+
 model层代码，用于对数据库中的数据进行CRUD.
 #+begin_src 
 goctl model mysql datasource -url "root:123456@tcp(127.0.0.1:13306)/url" -table="sequence" -dir "./model"
@@ -71,6 +84,7 @@ goctl model mysql datasource -url "root:123456@tcp(127.0.0.1:13306)/url" -table=
 下载相关依赖 :: =go mod tidy=
 
 ** 运行
+
 =go run shortlink.go= 
 ** 修改配置结构体和配置文件
 etc/shortlink-api.yaml 与 internal/config/config.go 文件对齐
@@ -87,3 +101,61 @@ type ConvertRequest {
    #+end_src
 2.验证长链接是否是有效的
 发送http请求，判断返回的响应状态码是否是200
+
+* API 文档
+
+** POST /v1/shorturl — 创建短链接
+
+#+begin_src bash
+curl -X POST http://localhost:8888/v1/shorturl \
+  -H "Content-Type: application/json" \
+  -d '{"longUrl":"https://example.com"}'
+#+end_src
+
+#+begin_src json
+{"shortUrl":"singdile.space/aB3xZ"}
+#+end_src
+
+** GET /v1/:shortUrl — 访问短链接
+
+浏览器访问 =http://localhost:8888/v1/singdile.space/aB3xZ= 返回 HTTP 307 重定向到原长链接。
+
+* 核心设计
+
+| 特性 | 说明 |
+|------|------|
+| 发号器 | MyISAM + REPLACE INTO 生成唯一递增 ID |
+| Base62 编码 | 数字 ID → 短码 (0-9A-Za-z)，比 Base64 更友好 |
+| Murmur3 哈希 | 长链接去重，速度快、输出仅 8 字节整数 |
+| Bloom Filter | 快速判断短码一定不存在，减少 Redis/DB 压力 |
+| 黑名单 | ~128 个保留词和敏感词，拒绝生成对应短码 |
+| URL 可达性检查 | 创建前发送 HEAD 请求验证链接有效性 |
+| 循环链接检测 | 禁止将已有短链接再次缩短 |
+| Redis 缓存 | short→long 缓存 120s TTL |
+| SingleFlight | 同一时间只有一个请求回查 DB，防止缓存击穿 |
+
+* 配置说明
+
+| 字段 | 说明 |
+|------|------|
+| Host / Port | 服务监听地址 |
+| ShortUrlDB | 长短链接映射表 MySQL DSN |
+| SequenceDB | 发号器表 MySQL DSN |
+| RedisConf | 缓存 Redis (短链→长链) |
+| BizRedis | 业务 Redis (Bloom Filter) |
+| BloomFilter | 布隆过滤器 Key 名称和位长度 |
+| Domain | 短链接域名前缀 |
+| BlackList | 禁止生成的短码列表 |
+
+* 测试
+
+#+begin_src bash
+go test ./...
+#+end_src
+
+* 迁移文件
+
+=migrations/= 目录存放数据库版本迁移 SQL，通过 docker 中的 =migrate/migrate= 容器自动执行。
+* 实现模块架构图
+[[./convertURL.png][长链接转换短链接
+]][[./showLongURL.png][短链接查找跳转长链接]]
