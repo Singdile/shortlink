@@ -122,3 +122,6 @@ commit;
 比如有两台机器。设置步长step为2，TicketServer1的初始值为1（1，3，5，7，9，11...）、TicketServer2的初始值为2（2，4，6，8，10...）。
 
 
+* 实现模块架构图
+[[./convertURL.png][长链接转换短链接
+]][[./showLongURL.png][短链接查找跳转长链接]]

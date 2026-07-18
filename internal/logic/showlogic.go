@@ -33,8 +33,6 @@ func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err 
 	// 1.参数校验
 	shortlinkstr := req.ShortUrl
 
-	// 优化添加Redis缓存
-
 	// 2.布隆过滤器校验
 	exists, err := l.svcCtx.LinkBloom.Exists([]byte(shortlinkstr))
 	if err != nil {
@@ -45,7 +43,7 @@ func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err 
 	}
 
 	l.Infof("通过布隆过滤器%s", shortlinkstr)
-	// 优化添加Redis缓存
+	// 3.优化添加Redis缓存
 	res, err := l.svcCtx.RedisClient.GetCtx(l.ctx, shortlinkstr)
 	if err != nil { //redis出现错误
 		l.Logger.Errorf("redis get err: %v", err)
@@ -54,7 +52,7 @@ func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err 
 	if len(res) != 0 { //成功查找缓存，且不为空
 		return &types.ShowResponse{LongUrl: res}, nil
 	}
-	// 2.到数据库中查找
+	// 4.到数据库中查找
 	// singleflight supports one key only to execute once
 	longUrl, err := l.svcCtx.SingleFlight.Do(shortlinkstr, func() (interface{}, error) {
 		// after lock , check the source
@@ -88,7 +86,7 @@ func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err 
 	if err != nil {
 		return nil, err
 	}
-	// 3. 返回响应
+	// 5. 返回响应
 	resp = &types.ShowResponse{
 		LongUrl: longUrl.(string),
 	}

@@ -48,6 +48,10 @@ services:
     restart: always
     ports:
       - "8888:8888"
+    environment:
+      MYSQL_URL: "root:123456@tcp(mysql-server:3306)/url?parseTime=true"
+      REDIS_URL: "redis:6379"
+
     depends_on:
       mysql-server:
         condition: service_healthy

@@ -95,7 +95,6 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 		if _, ok := l.svcCtx.BlackMap[shortlinkString]; !ok { //没有特殊词汇，则生成的短链符合要求，跳出循环
 			break
 		}
-
 	}
 
 	// 5. 将长链接和短链接的对应关系写入数据库
@@ -119,7 +118,7 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 		return nil, err
 	}
 
-	// 写入布隆过滤器
+	// 生成的短链接写入布隆过滤器
 	if err := l.svcCtx.LinkBloom.Add([]byte(shortlinkString)); err != nil {
 		l.Errorf("短链接写入布隆过滤器失败.LinkBloom.Add(%s) failed", shortlinkString)
 	}

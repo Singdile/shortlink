@@ -6,6 +6,8 @@ import (
 	"path"
 )
 
+// GetBaeUrl 获取URL路径的最后一节
+// singdile.space/mn -> mn
 func GetBaseUrl(longurl string) (string, error) {
 	urlmap, err := url.Parse(longurl)
 	if err != nil {
