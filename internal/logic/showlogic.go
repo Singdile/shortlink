@@ -33,7 +33,21 @@ func (l *ShowLogic) Show(req *types.ShowRequest) (resp *types.ShowResponse, err 
 	// 1.参数校验
 	shortlinkstr := req.ShortUrl
 
+<<<<<<< HEAD
 	// 优化添加Redis缓存
+=======
+	// 2.布隆过滤器校验
+	exists, err := l.svcCtx.LinkBloom.Exists([]byte(shortlinkstr))
+	if err != nil {
+		l.Error("查询布隆过滤器异常，降级放行，err: %v", err.Error())
+	} else if !exists { // 100% 不存在
+		l.Infof("布隆过滤器拦截不存在的短链接，%s", shortlinkstr)
+		return nil, errors.New("用户不存在")
+	}
+
+	l.Infof("通过布隆过滤器%s", shortlinkstr)
+	// TODO： 优化添加Redis缓存
+>>>>>>> 399b175 (feat: 本地功能实现)
 	res, err := l.svcCtx.RedisClient.GetCtx(l.ctx, shortlinkstr)
 	if err != nil { //redis出现错误
 		l.Logger.Errorf("redis get err: %v", err)

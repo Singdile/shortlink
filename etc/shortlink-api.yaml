@@ -18,6 +18,15 @@ RedisConf:
   Type: node       # 可选值: node(单机), cluster(集群), sentinel(哨兵)
   TLS: false    # 是否开启 TLS
 
+BizRedis:
+  Host: 127.0.0.1:16379
+  Type: node       # 可选值: node(单机), cluster(集群), sentinel(哨兵)
+  TLS: false    # 是否开启 TLS
+
+BloomFilter:
+  Key: "bloom:link:short"
+  Bits: 20000000 # support 1 million shorlink, use 2.38MB
+
 # 短链接过滤词表
 BlackList:
   # 技术保留词

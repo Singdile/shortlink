@@ -119,6 +119,12 @@ func (l *ConvertLogic) Convert(req *types.ConvertRequest) (resp *types.ConvertRe
 		return nil, err
 	}
 
+	// 写入布隆过滤器
+	if err := l.svcCtx.LinkBloom.Add([]byte(shortlinkString)); err != nil {
+		l.Errorf("短链接写入布隆过滤器失败.LinkBloom.Add(%s) failed", shortlinkString)
+	}
+	l.Infof("短链接写入布隆过滤器成功，%s", shortlinkString)
+
 	// 返回响应, 拼接短域名和短链
 	shorturl := l.svcCtx.Config.Domain + shortlinkString
 	resp = &types.ConvertResponse{

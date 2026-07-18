@@ -8,18 +8,28 @@ import (
 	"short/model"
 	"short/pkg/idgenerator"
 
+	"github.com/zeromicro/go-zero/core/bloom"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/syncx"
 )
 
 type ServiceContext struct {
+<<<<<<< HEAD
 	Config       config.Config
 	UrlModel     model.ShortUrlMapModel
 	Sequence     idgenerator.Generator
 	BlackMap     map[string]struct{}
 	RedisClient  *redis.Redis
 	SingleFlight syncx.SingleFlight
+=======
+	Config      config.Config
+	UrlModel    model.ShortUrlMapModel
+	Sequence    idgenerator.Generator
+	BlackMap    map[string]struct{} //过滤词汇表
+	RedisClient *redis.Redis
+	LinkBloom   *bloom.Filter //短链接布隆过滤器
+>>>>>>> 399b175 (feat: 本地功能实现)
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -35,12 +45,32 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		blackMap[v] = struct{}{}
 	}
 
+	// 初始化bloom filter
+	// 1.初始化对应的redis
+	biredis := redis.MustNewRedis(c.BizRedis)
+	// 2.初始化bloom 实例
+	linkBloom := bloom.New(biredis, c.BloomFilter.Key, c.BloomFilter.Bits)
+
 	return &ServiceContext{
+<<<<<<< HEAD
 		Config:       c,
 		UrlModel:     urlModel,
 		Sequence:     sequenceModel,
 		BlackMap:     blackMap,
 		RedisClient:  rds,
 		SingleFlight: syncx.NewSingleFlight(),
+=======
+		Config:      c,
+		UrlModel:    urlModel,
+		Sequence:    sequenceModel,
+		BlackMap:    blackMap,
+		RedisClient: rds,
+		LinkBloom:   linkBloom,
+>>>>>>> 399b175 (feat: 本地功能实现)
 	}
+}
+
+// loadDataToBloomFilter 加载已有的短链接数据到布隆过滤器
+func loadDataToBloomFilter() {
+
 }
