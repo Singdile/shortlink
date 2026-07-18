@@ -15,21 +15,13 @@ import (
 )
 
 type ServiceContext struct {
-<<<<<<< HEAD
 	Config       config.Config
 	UrlModel     model.ShortUrlMapModel
 	Sequence     idgenerator.Generator
-	BlackMap     map[string]struct{}
+	BlackMap     map[string]struct{} //过滤词汇表
 	RedisClient  *redis.Redis
 	SingleFlight syncx.SingleFlight
-=======
-	Config      config.Config
-	UrlModel    model.ShortUrlMapModel
-	Sequence    idgenerator.Generator
-	BlackMap    map[string]struct{} //过滤词汇表
-	RedisClient *redis.Redis
-	LinkBloom   *bloom.Filter //短链接布隆过滤器
->>>>>>> 399b175 (feat: 本地功能实现)
+	LinkBloom    *bloom.Filter //短链接布隆过滤器
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -52,21 +44,13 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	linkBloom := bloom.New(biredis, c.BloomFilter.Key, c.BloomFilter.Bits)
 
 	return &ServiceContext{
-<<<<<<< HEAD
 		Config:       c,
 		UrlModel:     urlModel,
 		Sequence:     sequenceModel,
 		BlackMap:     blackMap,
 		RedisClient:  rds,
+		LinkBloom:    linkBloom,
 		SingleFlight: syncx.NewSingleFlight(),
-=======
-		Config:      c,
-		UrlModel:    urlModel,
-		Sequence:    sequenceModel,
-		BlackMap:    blackMap,
-		RedisClient: rds,
-		LinkBloom:   linkBloom,
->>>>>>> 399b175 (feat: 本地功能实现)
 	}
 }
 
