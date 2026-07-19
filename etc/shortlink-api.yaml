@@ -9,7 +9,7 @@ SequenceDB:
   MaxOpenConns: 10
   MaxIdleConns: 5
   ConnMaxLifetime: 30m
-Domain: singdile.space/
+Domain: s.singdile.space/
 
 
 # Redis 配置

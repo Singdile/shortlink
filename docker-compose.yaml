@@ -6,10 +6,10 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: url
-    ports:
-      - "13306:3306"
+    #ports:
+     # - "13306:3306"
     volumes:
-      - /home/singdile/.local/share/short-link/mysql:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -20,8 +20,8 @@ services:
     container_name: url-redis
     restart: always
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    ports:
-      - "16379:6379"
+#    ports:
+#     - "16379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -62,3 +62,4 @@ services:
 
 volumes:
   redis-data:
+  mysql-data:
